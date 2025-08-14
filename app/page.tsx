@@ -6,6 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star, ShoppingCart, Heart, X } from "lucide-react"
 
+enum Viewport {
+    sm = 'sm',
+    md = 'md',
+    lg = 'lg',
+    xl = 'xl',
+}
+
+type Breakpoint = keyof typeof Viewport
+
 interface Product {
   id: number
   name: string
@@ -110,16 +119,16 @@ export default function ProductGrid() {
     setExpandedProduct(expandedProduct === productId ? null : productId)
   }
 
-  const shouldShowExpandedDetail = (currentIndex: number, breakpoint: "mobile" | "tablet" | "desktop" | "xl") => {
+  const shouldShowExpandedDetail = (currentIndex: number, breakpoint: Breakpoint) => {
     if (!expandedProduct) return false
 
     const expandedIndex = sampleProducts.findIndex((p) => p.id === expandedProduct)
     if (expandedIndex === -1) return false
 
     const columnsPerRow = {
-      mobile: 1,
-      tablet: 2,
-      desktop: 3,
+      sm: 1,
+      md: 2,
+      lg: 3,
       xl: 4,
     }[breakpoint]
 
@@ -293,22 +302,22 @@ export default function ProductGrid() {
                 <>
                   {/* XL: 4 columns */}
                   <div className="hidden xl:contents">
-                    {shouldShowExpandedDetail(index, "xl") && renderExpandedDetail(expandedProductData)}
+                    {shouldShowExpandedDetail(index, Viewport.xl) && renderExpandedDetail(expandedProductData)}
                   </div>
 
                   {/* Desktop: 3 columns */}
                   <div className="hidden lg:contents xl:hidden">
-                    {shouldShowExpandedDetail(index, "desktop") && renderExpandedDetail(expandedProductData)}
+                    {shouldShowExpandedDetail(index, Viewport.lg) && renderExpandedDetail(expandedProductData)}
                   </div>
 
                   {/* Tablet: 2 columns */}
                   <div className="hidden md:contents lg:hidden">
-                    {shouldShowExpandedDetail(index, "tablet") && renderExpandedDetail(expandedProductData)}
+                    {shouldShowExpandedDetail(index, Viewport.md) && renderExpandedDetail(expandedProductData)}
                   </div>
 
                   {/* Mobile: 1 column */}
                   <div className="contents md:hidden">
-                    {shouldShowExpandedDetail(index, "mobile") && renderExpandedDetail(expandedProductData)}
+                    {shouldShowExpandedDetail(index, Viewport.sm) && renderExpandedDetail(expandedProductData)}
                   </div>
                 </>
               )}
