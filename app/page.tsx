@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -118,7 +118,16 @@ export default function ProductGrid() {
 
   const handleProductClick = (productId: number) => {
     const newExpandedProduct = expandedProduct === productId ? null : productId
-    setExpandedProduct(newExpandedProduct)
+
+    // Check if View Transitions API is supported
+    if ("startViewTransition" in document) {
+      ;(document as any).startViewTransition(() => {
+        setExpandedProduct(newExpandedProduct)
+      })
+    } else {
+      // Fallback for browsers that don't support View Transitions
+      setExpandedProduct(newExpandedProduct)
+    }
   }
 
   useEffect(() => {
@@ -239,6 +248,7 @@ export default function ProductGrid() {
       ref={(el) => {
         expandedDetailRefs.current[`${product.id}-${breakpoint}`] = el
       }}
+      style={{ viewTransitionName: `product-detail-${product.id}` }}
       className="col-span-full bg-card border rounded-lg p-6 shadow-lg animate-in slide-in-from-top-2 duration-300"
     >
       <div className="flex justify-between items-start mb-4">
