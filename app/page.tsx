@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star, ShoppingCart, Heart, X } from "lucide-react"
 
 enum Viewport {
-    sm = 'sm',
-    md = 'md',
-    lg = 'lg',
-    xl = 'xl',
+  sm = "sm",
+  md = "md",
+  lg = "lg",
+  xl = "xl",
 }
 
 type Breakpoint = keyof typeof Viewport
@@ -114,10 +114,36 @@ const sampleProducts: Product[] = [
 
 export default function ProductGrid() {
   const [expandedProduct, setExpandedProduct] = useState<number | null>(null)
+  const expandedDetailRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
 
   const handleProductClick = (productId: number) => {
-    setExpandedProduct(expandedProduct === productId ? null : productId)
+    const newExpandedProduct = expandedProduct === productId ? null : productId
+    setExpandedProduct(newExpandedProduct)
   }
+
+  useEffect(() => {
+    if (expandedProduct) {
+      const timer = setTimeout(() => {
+        const breakpoints: Breakpoint[] = ["xl", "lg", "md", "sm"]
+
+        for (const breakpoint of breakpoints) {
+          const refKey = `${expandedProduct}-${breakpoint}`
+          const element = expandedDetailRefs.current[refKey]
+
+          if (element && element.offsetParent !== null) {
+            element.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+              inline: "nearest",
+            })
+            break
+          }
+        }
+      }, 100)
+
+      return () => clearTimeout(timer)
+    }
+  }, [expandedProduct])
 
   const shouldShowExpandedDetail = (currentIndex: number, breakpoint: Breakpoint) => {
     if (!expandedProduct) return false
@@ -137,7 +163,6 @@ export default function ProductGrid() {
     const isLastInRow = (currentIndex + 1) % columnsPerRow === 0
     const isLastProduct = currentIndex === sampleProducts.length - 1
 
-    // Show detail panel after the last product in the row containing the expanded product
     return currentRow === expandedRow && (isLastInRow || isLastProduct)
   }
 
@@ -209,8 +234,13 @@ export default function ProductGrid() {
     </Card>
   )
 
-  const renderExpandedDetail = (product: Product) => (
-    <div className="col-span-full bg-card border rounded-lg p-6 shadow-lg animate-in slide-in-from-top-2 duration-300">
+  const renderExpandedDetail = (product: Product, breakpoint: Breakpoint) => (
+    <div
+      ref={(el) => {
+        expandedDetailRefs.current[`${product.id}-${breakpoint}`] = el
+      }}
+      className="col-span-full bg-card border rounded-lg p-6 shadow-lg animate-in slide-in-from-top-2 duration-300"
+    >
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-2xl font-bold">{product.name}</h2>
         <Button variant="ghost" size="sm" onClick={() => setExpandedProduct(null)}>
@@ -302,22 +332,26 @@ export default function ProductGrid() {
                 <>
                   {/* XL: 4 columns */}
                   <div className="hidden xl:contents">
-                    {shouldShowExpandedDetail(index, Viewport.xl) && renderExpandedDetail(expandedProductData)}
+                    {shouldShowExpandedDetail(index, Viewport.xl) &&
+                      renderExpandedDetail(expandedProductData, Viewport.xl)}
                   </div>
 
                   {/* Desktop: 3 columns */}
                   <div className="hidden lg:contents xl:hidden">
-                    {shouldShowExpandedDetail(index, Viewport.lg) && renderExpandedDetail(expandedProductData)}
+                    {shouldShowExpandedDetail(index, Viewport.lg) &&
+                      renderExpandedDetail(expandedProductData, Viewport.lg)}
                   </div>
 
                   {/* Tablet: 2 columns */}
                   <div className="hidden md:contents lg:hidden">
-                    {shouldShowExpandedDetail(index, Viewport.md) && renderExpandedDetail(expandedProductData)}
+                    {shouldShowExpandedDetail(index, Viewport.md) &&
+                      renderExpandedDetail(expandedProductData, Viewport.md)}
                   </div>
 
                   {/* Mobile: 1 column */}
                   <div className="contents md:hidden">
-                    {shouldShowExpandedDetail(index, Viewport.sm) && renderExpandedDetail(expandedProductData)}
+                    {shouldShowExpandedDetail(index, Viewport.sm) &&
+                      renderExpandedDetail(expandedProductData, Viewport.sm)}
                   </div>
                 </>
               )}
