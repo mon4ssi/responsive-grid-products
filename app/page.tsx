@@ -114,6 +114,7 @@ const sampleProducts: Product[] = [
 
 export default function ProductGrid() {
   const [expandedProduct, setExpandedProduct] = useState<number | null>(null)
+  const productCardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
   const expandedDetailRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
 
   const handleProductClick = (productId: number) => {
@@ -133,20 +134,14 @@ export default function ProductGrid() {
   useEffect(() => {
     if (expandedProduct) {
       const timer = setTimeout(() => {
-        const breakpoints: Breakpoint[] = ["xl", "lg", "md", "sm"]
+        const productElement = productCardRefs.current[expandedProduct]
 
-        for (const breakpoint of breakpoints) {
-          const refKey = `${expandedProduct}-${breakpoint}`
-          const element = expandedDetailRefs.current[refKey]
-
-          if (element && element.offsetParent !== null) {
-            element.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-              inline: "nearest",
-            })
-            break
-          }
+        if (productElement) {
+          productElement.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+            inline: "nearest",
+          })
         }
       }, 100)
 
@@ -178,6 +173,9 @@ export default function ProductGrid() {
   const renderProductCard = (product: Product) => (
     <Card
       key={product.id}
+      ref={(el) => {
+        productCardRefs.current[product.id] = el
+      }}
       className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group"
       onClick={() => handleProductClick(product.id)}
     >
