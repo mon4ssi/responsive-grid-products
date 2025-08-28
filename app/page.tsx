@@ -114,19 +114,31 @@ const sampleProducts: Product[] = [
 
 export default function ProductGrid() {
   const [expandedProduct, setExpandedProduct] = useState<number | null>(null)
+  const [prefetchedProducts, setPrefetchedProducts] = useState<Set<number>>(new Set())
   const productCardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
   const expandedDetailRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+
+  const handleProductHover = (productId: number) => {
+    if (prefetchedProducts.has(productId)) return
+
+    const product = sampleProducts.find((p) => p.id === productId)
+    if (product?.image) {
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.src = product.image
+
+      setPrefetchedProducts((prev) => new Set(prev).add(productId))
+    }
+  }
 
   const handleProductClick = (productId: number) => {
     const newExpandedProduct = expandedProduct === productId ? null : productId
 
-    // Check if View Transitions API is supported
     if ("startViewTransition" in document) {
       ;(document as any).startViewTransition(() => {
         setExpandedProduct(newExpandedProduct)
       })
     } else {
-      // Fallback for browsers that don't support View Transitions
       setExpandedProduct(newExpandedProduct)
     }
   }
@@ -178,6 +190,7 @@ export default function ProductGrid() {
       }}
       className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group"
       onClick={() => handleProductClick(product.id)}
+      onMouseEnter={() => handleProductHover(product.id)}
     >
       <CardHeader className="pb-2">
         <div className="aspect-square relative overflow-hidden rounded-md bg-muted">
@@ -338,25 +351,21 @@ export default function ProductGrid() {
 
               {expandedProductData && (
                 <>
-                  {/* XL: 4 columns */}
                   <div className="hidden xl:contents">
                     {shouldShowExpandedDetail(index, Viewport.xl) &&
                       renderExpandedDetail(expandedProductData, Viewport.xl)}
                   </div>
 
-                  {/* Desktop: 3 columns */}
                   <div className="hidden lg:contents xl:hidden">
                     {shouldShowExpandedDetail(index, Viewport.lg) &&
                       renderExpandedDetail(expandedProductData, Viewport.lg)}
                   </div>
 
-                  {/* Tablet: 2 columns */}
                   <div className="hidden md:contents lg:hidden">
                     {shouldShowExpandedDetail(index, Viewport.md) &&
                       renderExpandedDetail(expandedProductData, Viewport.md)}
                   </div>
 
-                  {/* Mobile: 1 column */}
                   <div className="contents md:hidden">
                     {shouldShowExpandedDetail(index, Viewport.sm) &&
                       renderExpandedDetail(expandedProductData, Viewport.sm)}
